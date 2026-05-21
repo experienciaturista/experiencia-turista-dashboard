@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#FF0093" />
+  <title>Experiencia Turista — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    :root {
+      --pink: #FF0093;
+      --blue: #51B5E0;
+      --bg: #0d0d0d;
+      --bg2: #161616;
+      --bg3: #1f1f1f;
+      --border: rgba(255,255,255,0.07);
+      --text: #f0f0f0;
+      --text2: #999;
+      --text3: #555;
+      --green: #1DB954;
+      --orange: #EF9F27;
+      --red: #E24B4A;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Montserrat', sans-serif;
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* HEADER */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13,13,13,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo-wrap { display: flex; align-items: center; gap: 12px; }
+    .logo-circle {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: var(--pink);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 0 16px rgba(255,0,147,0.4);
+    }
+    .logo-circle svg { width: 22px; height: 14px; }
+    .brand-name {
+      font-size: 14px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text);
+    }
+    .brand-sub {
+      font-size: 10px; color: var(--text2);
+      display: flex; align-items: center; gap: 5px; margin-top: 2px;
+    }
+    .live-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; } 50% { opacity: 0.3; }
+    }
+    .date-badge {
+      font-size: 11px; color: var(--text2);
+      background: var(--bg3);
+      padding: 6px 14px; border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+
+    /* TABS */
+    .tabs-wrap {
+      padding: 0 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      overflow-x: auto;
+      display: flex;
+    }
+    .tabs-wrap::-webkit-scrollbar { display: none; }
+    .tab {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--text2);
+      padding: 14px 18px;
+      border: none; background: none; cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: color 0.2s;
+    }
+    .tab.active { color: var(--pink); border-bottom: 2px solid var(--pink); }
+
+    /* CONTENT */
+    .content { padding: 20px; max-width: 900px; margin: 0 auto; }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* METRICS */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    @media (min-width: 600px) {
+      .metrics { grid-template-columns: repeat(4, 1fr); }
+    }
+    .metric {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .metric::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px; height: 100%;
+      border-radius: 3px 0 0 3px;
+    }
+    .metric.pink::before { background: var(--pink); }
+    .metric.blue::before { background: var(--blue); }
+    .metric-label {
+      font-size: 10px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--text2); margin-bottom: 8px;
+    }
+    .metric-value { font-size: 28px; font-weight: 700; color: var(--text); }
+    .metric-delta { font-size: 11px; margin-top: 4px; color: var(--text2); }
+    .delta-up { color: var(--green); }
+
+    /* GRID 2 */
+    .grid2 { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 20px; }
+    @media (min-width: 600px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+
+    /* CARDS */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+    .card-title {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--text2); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .card-title-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+    /* FUNNEL */
+    .funnel-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .funnel-label { font-size: 11px; color: var(--text); width: 120px; flex-shrink: 0; }
+    .funnel-track { flex: 1; height: 7px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+    .funnel-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+    .funnel-pct { font-size: 11px; color: var(--text2); width: 36px; text-align: right; flex-shrink: 0; }
+
+    /* CHANNELS */
+    .channel-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .channel-row:last-child { border-bottom: none; }
+    .channel-left { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; }
+    .channel-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .channel-stats { display: flex; gap: 20px; }
+    .channel-stat { text-align: right; }
+    .channel-stat-val { font-size: 14px; font-weight: 600; }
+    .channel-stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* EXCURSIONES */
+    .exc-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .exc-rank { font-size: 12px; font-weight: 700; color: var(--text3); width: 16px; }
+    .exc-info { flex: 1; }
+    .exc-name { font-size: 12px; font-weight: 500; color: var(--text); }
+    .exc-track { height: 3px; background: var(--bg3); border-radius: 2px; margin-top: 5px; }
+    .exc-bar { height: 3px; border-radius: 2px; }
+    .exc-count { font-size: 11px; color: var(--text2); flex-shrink: 0; }
+
+    /* OBJECIONES */
+    .obj-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 0; border-bottom: 1px solid var(--border);
+    }
+    .obj-item:last-child { border-bottom: none; }
+    .obj-text { font-size: 12px; color: var(--text); }
+    .obj-pct { font-size: 12px; font-weight: 700; color: var(--pink); }
+
+    /* LEADS TABLE */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 480px; }
+    th {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--text2);
+      padding: 8px 10px; border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+    td { padding: 10px; border-bottom: 1px solid var(--border); color: var(--text); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg3); }
+
+    /* BADGES */
+    .badge {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 3px 9px; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .badge-nuevo { background: rgba(81,181,224,0.15); color: var(--blue); }
+    .badge-calificado { background: rgba(255,0,147,0.15); color: var(--pink); }
+    .badge-propuesta { background: rgba(239,159,39,0.15); color: var(--orange); }
+    .badge-objecion { background: rgba(226,75,74,0.15); color: var(--red); }
+    .badge-cerrado { background: rgba(29,185,84,0.15); color: var(--green); }
+    .badge-perdido { background: rgba(100,100,100,0.15); color: var(--text2); }
+
+    /* CHART CONTAINER */
+    .chart-wrap { position: relative; height: 220px; margin-top: 8px; }
+    .chart-wrap-tall { position: relative; height: 300px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="logo-wrap">
+      <div class="logo-circle">
+        <svg viewBox="0 0 22 14" fill="none">
+          <path d="M1 11 L4.5 3.5 L8 11 L11 1.5 L14.5 9 L18 5 L21 7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">Experiencia Turista</div>
+        <div class="brand-sub"><span class="live-dot"></span>En vivo · San Rafael, Mendoza</div>
+      </div>
+    </div>
+    <div class="date-badge" id="dateLabel">Cargando...</div>
+  </header>
+
+  <div class="tabs-wrap">
+    <button class="tab active" onclick="showTab('hoy',this)">Hoy</button>
+    <button class="tab" onclick="showTab('semana',this)">Semana</button>
+    <button class="tab" onclick="showTab('mes',this)">Mes</button>
+    <button class="tab" onclick="showTab('leads',this)">Leads</button>
+    <button class="tab" onclick="showTab('productos',this)">Productos</button>
+  </div>
+
+  <div class="content">
+
+    <!-- HOY -->
+    <div class="tab-pane active" id="tab-hoy">
+      <div class="metrics">
+        <div class="metric pink">
+          <div class="metric-label">Mensajes hoy</div>
+          <div class="metric-value">47</div>
+          <div class="metric-delta delta-up">↑ +12 vs ayer</div>
+        </div>
+        <div class="metric blue">
+          <div class="metric-label">Leads calificados</div>
+          <div class="metric-value">18</div>
+          <div class="metric-delta delta-up">38% del total</div>
+        </div>
+        <div class="metric pink">
+          <div class="metric-label">Ventas cerradas</div>
+          <div class="metric-value">3</div>
+          <div class="metric-delta delta-up">$600.000 ARS</div>
+        </div>
+        <div class="metric blue">
+          <div class="metric-label">Conversión</div>
+          <div class="metric-value">6.4%</div>
+          <div class="metric-delta delta-up">↑ +1.2% vs ayer</div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title"><span class="card-title-dot" style="background:#FF0093"></span>Embudo del día</div>
+          <div class="funnel-row"><span class="funnel-label">Nuevos</span><div class="funnel-track"><div class="funnel-fill" style="width:100%;background:#51B5E0"></div></div><span class="funnel-pct">47 · 100%</span></div>
+          <div class="funnel-row"><span class="funnel-label">Calificados</span><div class="funnel-track"><div class="funnel-fill" style="width:72%;background:#FF0093"></div></div><span class="funnel-pct">34 · 72%</span></div>
+          <div class="funnel-row"><span class="funnel-label">Propuesta</span><div class="funnel-track"><div class="funnel-fill" style="width:45%;background:#FF0093;opacity:0.7"></div></div><span class="funnel-pct">21 · 45%</span></div>
+          <div class="funnel-row"><span class="funnel-label">Negociando</span><div class="funnel-track"><div class="funnel-fill" style="width:19%;background:#FF0093;opacity:0.45"></div></div><span class="funnel-pct">9 · 19%</span></div>
+          <div class="funnel-row"><span class="funnel-label">Cerrados</span><div class="funnel-track"><div class="funnel-fill" style="width:6%;background:#1DB954"></div></div><span class="funnel-pct">3 · 6%</span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="card-title-dot" style="background:#51B5E0"></span>Por canal</div>
+          <div class="channel-row">
+            <div class="channel-left">
+              <div class="channel-icon" style="background:rgba(29,185,84,0.15);color:#1DB954">📱</div>WhatsApp
+            </div>
+            <div class="channel-stats">
+              <div class="channel-stat"><div class="channel-stat-val">22</div><div class="channel-stat-label">msgs</div></div>
+              <div class="channel-stat"><div class="channel-stat-val" style="color:#FF0093">40%</div><div class="channel-stat-label">conv.</div></div>
+            </div>
+          </div>
+          <div class="channel-row">
+            <div class="channel-left">
+              <div class="channel-icon" style="background:rgba(255,0,147,0.15);color:#FF0093">📸</div>Instagram
+            </div>
+            <div class="channel-stats">
+              <div class="channel-stat"><div class="channel-stat-val">18</div><div class="channel-stat-label">msgs</div></div>
+              <div class="channel-stat"><div class="channel-stat-val" style="color:#FF0093">28%</div><div class="channel-stat-label">conv.</div></div>
+            </div>
+          </div>
+          <div class="channel-row">
+            <div class="channel-left">
+              <div class="channel-icon" style="background:rgba(81,181,224,0.15);color:#51B5E0">👤</div>Facebook
+            </div>
+            <div class="channel-stats">
+              <div class="channel-stat"><div class="channel-stat-val">7</div><div class="channel-stat-label">msgs</div></div>
+              <div class="channel-stat"><div class="channel-stat-val" style="color:#FF0093">14%</div><div class="channel-stat-label">conv.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title"><span class="card-title-dot" style="background:#FF0093"></span>Excursiones más consultadas</div>
+          <div class="exc-row"><span class="exc-rank">1</span><div class="exc-info"><div class="exc-name">Cañón del Atuel</div><div class="exc-track"><div class="exc-bar" style="width:100%;background:#FF0093"></div></div></div><span class="exc-count">14</span></div>
+          <div class="exc-row"><span class="exc-rank">2</span><div class="exc-info"><div class="exc-name">Rafting Valle Grande</div><div class="exc-track"><div class="exc-bar" style="width:79%;background:#51B5E0"></div></div></div><span class="exc-count">11</span></div>
+          <div class="exc-row"><span class="exc-rank">3</span><div class="exc-info"><div class="exc-name">Las Leñas</div><div class="exc-track"><div class="exc-bar" style="width:57%;background:#FF0093"></div></div></div><span class="exc-count">8</span></div>
+          <div class="exc-row"><span class="exc-rank">4</span><div class="exc-info"><div class="exc-name">Los Reyunos Full Day</div><div class="exc-track"><div class="exc-bar" style="width:36%;background:#51B5E0"></div></div></div><span class="exc-count">5</span></div>
+          <div class="exc-row"><span class="exc-rank">5</span><div class="exc-info"><div class="exc-name">Termas de Cacheuta</div><div class="exc-track"><div class="exc-bar" style="width:21%;background:#FF0093"></div></div></div><span class="exc-count">3</span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="card-title-dot" style="background:#51B5E0"></span>Objeciones más frecuentes</div>
+          <div class="obj-item"><span class="obj-text">"Es muy caro"</span><span class="obj-pct">38%</span></div>
+          <div class="obj-item"><span class="obj-text">"Lo consulto con mi pareja"</span><span class="obj-pct">24%</span></div>
+          <div class="obj-item"><span class="obj-text">"¿Es seguro para niños?"</span><span class="obj-pct">18%</span></div>
+          <div class="obj-item"><span class="obj-text">"¿Tienen descuento?"</span><span class="obj-pct">12%</span></div>
+          <div class="obj-item"><span class="obj-text">"Vi otras agencias"</span><span class="obj-pct">8%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEMANA -->
+    <div class="tab-pane" id="tab-semana">
+      <div class="metrics">
+        <div class="metric pink"><div class="metric-label">Mensajes semana</div><div class="metric-value">284</div><div class="metric-delta delta-up">↑ +23% vs anterior</div></div>
+        <div class="metric blue"><div class="metric-label">Leads calificados</div><div class="metric-value">108</div><div class="metric-delta delta-up">38% del total</div></div>
+        <div class="metric pink"><div class="metric-label">Ventas cerradas</div><div class="metric-value">19</div><div class="metric-delta delta-up">$3.800.000 ARS</div></div>
+        <div class="metric blue"><div class="metric-label">Conversión</div><div class="metric-value">6.7%</div><div class="metric-delta delta-up">↑ +0.8% vs anterior</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot" style="background:#FF0093"></span>Mensajes por día</div>
+        <div class="chart-wrap"><canvas id="weekChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- MES -->
+    <div class="tab-pane" id="tab-mes">
+      <div class="metrics">
+        <div class="metric pink"><div class="metric-label">Mensajes mes</div><div class="metric-value">1.240</div><div class="metric-delta delta-up">↑ +31% vs anterior</div></div>
+        <div class="metric blue"><div class="metric-label">Leads calificados</div><div class="metric-value">471</div><div class="metric-delta delta-up">38% del total</div></div>
+        <div class="metric pink"><div class="metric-label">Ventas cerradas</div><div class="metric-value">84</div><div class="metric-delta delta-up">$16.800.000 ARS</div></div>
+        <div class="metric blue"><div class="metric-label">Ticket promedio</div><div class="metric-value">$200k</div><div class="metric-delta">por venta</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot" style="background:#51B5E0"></span>Ventas por semana</div>
+        <div class="chart-wrap"><canvas id="monthChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- LEADS -->
+    <div class="tab-pane" id="tab-leads">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot" style="background:#FF0093"></span>Últimos leads</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Nombre</th><th>Canal</th><th>Interés</th><th>Personas</th><th>Estado</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>María G.</td><td>WhatsApp</td><td>Cañón del Atuel</td><td>4</td><td><span class="badge badge-propuesta">propuesta</span></td></tr>
+              <tr><td>Carlos R.</td><td>Instagram</td><td>Rafting</td><td>2</td><td><span class="badge badge-calificado">calificado</span></td></tr>
+              <tr><td>Familia López</td><td>WhatsApp</td><td>Las Leñas</td><td>5</td><td><span class="badge badge-cerrado">cerrado ✓</span></td></tr>
+              <tr><td>Ana M.</td><td>Facebook</td><td>Termas Cacheuta</td><td>2</td><td><span class="badge badge-objecion">objeción</span></td></tr>
+              <tr><td>Grupo Amigos</td><td>Instagram</td><td>Full Day Valle Grande</td><td>8</td><td><span class="badge badge-nuevo">nuevo</span></td></tr>
+              <tr><td>Roberto S.</td><td>WhatsApp</td><td>Los Reyunos</td><td>3</td><td><span class="badge badge-perdido">perdido</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTOS -->
+    <div class="tab-pane" id="tab-productos">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot" style="background:#FF0093"></span>Rendimiento por excursión — este mes</div>
+        <div class="chart-wrap-tall"><canvas id="prodChart"></canvas></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Fecha actual
+    const now = new Date();
+    document.getElementById('dateLabel').textContent = now.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    // Tabs
+    function showTab(name, btn) {
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+      btn.classList.add('active');
+      if (name === 'semana' && !window.weekDone) {
+        window.weekDone = true;
+        new Chart(document.getElementById('weekChart'), {
+          type: 'bar',
+          data: {
+            labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+            datasets: [{ label: 'Mensajes', data: [38, 45, 41, 52, 49, 36, 23], backgroundColor: '#FF0093', borderRadius: 6 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#999' } }, x: { grid: { display: false }, ticks: { color: '#999' } } } }
+        });
+      }
+      if (name === 'mes' && !window.monthDone) {
+        window.monthDone = true;
+        new Chart(document.getElementById('monthChart'), {
+          type: 'line',
+          data: {
+            labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+            datasets: [{ label: 'Ventas', data: [18, 22, 19, 25], borderColor: '#FF0093', backgroundColor: 'rgba(255,0,147,0.1)', fill: true, tension: 0.4, pointBackgroundColor: '#FF0093', pointRadius: 6 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#999' } }, x: { grid: { display: false }, ticks: { color: '#999' } } } }
+        });
+      }
+      if (name === 'productos' && !window.prodDone) {
+        window.prodDone = true;
+        new Chart(document.getElementById('prodChart'), {
+          type: 'bar',
+          data: {
+            labels: ['Cañón del Atuel', 'Rafting', 'Las Leñas', 'Los Reyunos', 'Termas Cacheuta', 'Caminos del Vino', 'Tirolesa', 'Kayak'],
+            datasets: [{ label: 'Consultas', data: [58, 47, 38, 31, 24, 18, 12, 9], backgroundColor: ['#FF0093','#51B5E0','#FF0093','#51B5E0','#FF0093','#51B5E0','#FF0093','#51B5E0'], borderRadius: 5 }]
+          },
+          options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#999' } }, y: { grid: { display: false }, ticks: { color: '#999', autoSkip: false, font: { size: 11 } } } } }
+        });
+      }
+    }
+  </script>
+</body>
+</html>
